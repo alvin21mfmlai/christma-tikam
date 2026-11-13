@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Christmas Party Lucky Draw</title>
+<meta name="description" content="Spin the wheel to get your lucky draw number.">
+<meta name="theme-color" content="#0b261d">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='27' y='4' width='10' height='9' rx='2' fill='%23e2b13c'/%3E%3Ccircle cx='32' cy='38' r='23' fill='%23c62f3a'/%3E%3Cpath d='M12 34h40' stroke='%23e2b13c' stroke-width='4'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-0: #081d17; --bg-1: #0e2f24; --bg-2: #1b5a3f;
+    --red: #c62f3a; --red-d: #8f1d27; --green: #1e7a4a; --cream: #f6ecd6; --gold: #e2b13c; --gold-l: #f6d77c;
+    --ink: #fdf8ee; --ink-2: #cfe0d6; --ink-3: #9fbcae;
+    --card: rgba(255,255,255,.06); --line: rgba(255,255,255,.14);
+    --serif: "Fraunces", Georgia, "Times New Roman", serif;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    font-family: var(--sans); color: var(--ink); -webkit-font-smoothing: antialiased;
+    background: radial-gradient(1100px 650px at 50% -12%, var(--bg-2) 0%, var(--bg-1) 48%, var(--bg-0) 100%) fixed, var(--bg-0);
+    overflow-x: hidden;
+  }
+  canvas.fx { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  #snow { z-index: 0; opacity: .7; }
+  #confetti { z-index: 50; }
+  [hidden] { display: none !important; }
+
+  .wrap { position: relative; z-index: 1; max-width: 560px; margin: 0 auto; padding: max(22px, env(safe-area-inset-top)) 18px 40px; }
+
+  .hero { text-align: center; padding: 6px 0 14px; }
+  .hero .orn { width: 46px; height: 54px; display: block; margin: 0 auto 6px; filter: drop-shadow(0 6px 14px rgba(0,0,0,.35)); }
+  .hero h1 { font-family: var(--serif); font-weight: 800; font-size: clamp(28px, 7.4vw, 40px); line-height: 1.08; margin: 0; letter-spacing: -.01em; }
+  .hero h1 span { color: var(--gold-l); white-space: nowrap; }
+  body.compact .hero p, body.compact .hero .orn { display: none; }
+  body.compact .hero h1 { font-size: clamp(24px, 6vw, 32px); }
+  .hero p { margin: 10px auto 0; max-width: 34ch; color: var(--ink-2); font-size: 15.5px; line-height: 1.45; }
+
+  .progress { margin: 14px auto 22px; max-width: 360px; font-size: 13.5px; color: var(--ink-3); text-align: center; }
+  .progress .bar { height: 6px; border-radius: 99px; background: rgba(255,255,255,.1); overflow: hidden; margin-top: 7px; }
+  .progress .bar i { display: block; height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, var(--red), var(--gold)); transition: width .6s ease; }
+
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 20px 16px; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+  h2 { font-family: var(--serif); font-weight: 700; font-size: 22px; margin: 0 0 4px; text-align: center; }
+  .sub { color: var(--ink-3); text-align: center; font-size: 14px; margin: 0 0 14px; }
+
+  .countdown { text-align: center; margin: 4px auto 6px; }
+  .cd-when { color: var(--ink-2); font-size: 15px; }
+  .cd-when b { color: var(--gold-l); }
+  .cd-clock { display: flex; justify-content: center; gap: 8px; margin-top: 10px; }
+  .cd-unit { min-width: 62px; padding: 8px 6px 6px; border-radius: 12px; background: rgba(0,0,0,.25); border: 1px solid var(--line); }
+  .cd-unit b { display: block; font-family: var(--serif); font-size: 28px; line-height: 1; font-variant-numeric: tabular-nums; }
+  .cd-unit small { font-size: 10.5px; text-transform: uppercase; letter-spacing: .12em; color: var(--ink-3); }
+  .test-bar { position: sticky; top: 0; z-index: 60; text-align: center; font-size: 12.5px; font-weight: 800; letter-spacing: .1em; color: #2b1606; padding: 6px 10px; background: repeating-linear-gradient(-45deg, #f6d77c 0 14px, #e2b13c 14px 28px); }
+  .search { width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: rgba(0,0,0,.22); color: var(--ink); font: inherit; font-size: 16px; margin-bottom: 12px; }
+  .search::placeholder { color: var(--ink-3); }
+  .search:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
+
+  .names { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }
+  .name { appearance: none; border: 1px solid var(--line); background: rgba(255,255,255,.08); color: var(--ink); font: inherit; font-size: 15.5px; font-weight: 600; padding: 13px 10px; border-radius: 12px; cursor: pointer; text-align: center; transition: transform .12s, background .15s, border-color .15s; display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: 52px; justify-content: center; }
+  .name:hover { background: rgba(255,255,255,.14); border-color: rgba(226,177,60,.6); }
+  .name:active { transform: scale(.97); }
+  .name:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+  .name small { font-weight: 500; font-size: 11.5px; color: var(--ink-3); }
+  .name.done, .name:disabled { background: rgba(0,0,0,.18); color: var(--ink-3); border-style: dashed; cursor: not-allowed; }
+  .name:disabled:hover { background: rgba(0,0,0,.18); border-color: var(--line); }
+  .name:disabled:active { transform: none; }
+  .name.done small { color: var(--gold-l); }
+  .empty-msg { grid-column: 1 / -1; text-align: center; color: var(--ink-3); padding: 12px; }
+
+  .mine { margin: 16px 0 0; padding-top: 14px; border-top: 1px dashed var(--line); text-align: center; font-size: 13.5px; color: var(--ink-3); }
+  .mine b { color: var(--ink); }
+  .chip { display: inline-flex; gap: 6px; align-items: center; padding: 6px 10px; margin: 6px 3px 0; border-radius: 99px; background: rgba(226,177,60,.14); border: 1px solid rgba(226,177,60,.4); color: var(--ink); font-size: 14px; cursor: pointer; font: inherit; }
+  .chip strong { color: var(--gold-l); font-family: var(--serif); }
+
+  /* ── wheel ── */
+  .greet { text-align: center; font-size: 17px; margin: 0 0 14px; color: var(--ink-2); }
+  .greet b { color: var(--ink); font-family: var(--serif); font-size: 21px; }
+  .wheel-box { position: relative; width: min(86vw, 400px); aspect-ratio: 1; margin: 6px auto 18px; }
+  .wheel-box svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  #wheel { will-change: transform; transform: rotate(0deg); }
+  .rim { filter: drop-shadow(0 14px 30px rgba(0,0,0,.45)); }
+  .bulb { fill: #fff6d6; }
+  .bulb.b2 { animation: blink 1.4s infinite; }
+  .bulb.b1 { animation: blink 1.4s .7s infinite; }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+  .wheel-box .pointer { position: absolute; inset: auto; left: 50%; top: -5%; width: 12%; height: auto; transform: translateX(-50%); z-index: 3; filter: drop-shadow(0 4px 5px rgba(0,0,0,.45)); }
+  .wheel-done { position: absolute; inset: 18%; display: grid; place-items: center; text-align: center; color: var(--ink-2); font-family: var(--serif); font-size: 18px; z-index: 2; }
+
+  .btn { display: block; width: 100%; max-width: 340px; margin: 0 auto; appearance: none; border: 0; border-radius: 16px; padding: 17px 20px; font: inherit; font-weight: 800; font-size: 19px; letter-spacing: .02em; color: #2b1606; cursor: pointer;
+    background: linear-gradient(180deg, var(--gold-l), var(--gold)); box-shadow: 0 8px 0 #9c7419, 0 14px 26px rgba(0,0,0,.35); transition: transform .08s, box-shadow .08s, filter .15s; }
+  .btn:active:not(:disabled) { transform: translateY(5px); box-shadow: 0 3px 0 #9c7419, 0 6px 12px rgba(0,0,0,.3); }
+  .btn:focus-visible { outline: 3px solid #fff; outline-offset: 4px; }
+  .btn:disabled { cursor: default; filter: grayscale(.6) brightness(.8); }
+  .link { display: block; margin: 18px auto 0; background: none; border: 0; color: var(--ink-3); font: inherit; font-size: 14.5px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; padding: 6px; }
+  .link:hover { color: var(--ink); }
+  .msg { text-align: center; color: var(--ink-2); font-size: 14.5px; line-height: 1.45; margin: 14px auto 0; max-width: 36ch; min-height: 1.4em; }
+
+  /* ── result ── */
+  .result { text-align: center; }
+  .result .lead { font-size: 17px; color: var(--ink-2); margin: 4px 0 6px; }
+  .result .lead b { font-family: var(--serif); color: var(--ink); font-size: 22px; }
+  .bauble { position: relative; width: min(64vw, 250px); margin: 18px auto 10px; animation: pop .7s cubic-bezier(.2,1.6,.4,1) both; }
+  .bauble svg { width: 100%; display: block; filter: drop-shadow(0 18px 30px rgba(0,0,0,.45)); }
+  .bauble .num { position: absolute; left: 0; right: 0; top: 30%; bottom: 0; display: grid; place-items: center; font-family: var(--serif); font-weight: 800; color: var(--cream); font-size: min(26vw, 108px); line-height: 1; text-shadow: 0 3px 0 rgba(0,0,0,.25); }
+  @keyframes pop { from { transform: scale(.4) rotate(-12deg); opacity: 0; } to { transform: none; opacity: 1; } }
+  .result .label { font-size: 13px; text-transform: uppercase; letter-spacing: .14em; color: var(--gold-l); margin: 0; }
+  .result .hint { color: var(--ink-3); font-size: 14px; margin: 12px 0 0; }
+  .result .note { display: inline-block; margin-top: 12px; padding: 8px 12px; border-radius: 10px; background: rgba(226,177,60,.12); border: 1px solid rgba(226,177,60,.35); font-size: 14px; color: var(--ink-2); }
+
+  .err { margin: 16px auto 0; max-width: 420px; padding: 11px 14px; border-radius: 12px; background: rgba(198,47,58,.18); border: 1px solid rgba(198,47,58,.55); color: #ffdfe1; font-size: 14px; text-align: center; }
+  footer { text-align: center; color: var(--ink-3); font-size: 13px; margin-top: 28px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bulb.b1, .bulb.b2 { animation: none; }
+    .bauble { animation: none; }
+    .progress .bar i { transition: none; }
+  }
+</style>
+</head>
+<body>
+<canvas id="snow" class="fx" aria-hidden="true"></canvas>
+<div id="testBar" class="test-bar" hidden>TEST SITE · numbers drawn here don’t count</div>
+
+<main class="wrap">
+  <header class="hero">
+    <svg class="orn" viewBox="0 0 46 54" aria-hidden="true">
+      <defs><radialGradient id="og" cx=".35" cy=".35" r=".8"><stop offset="0" stop-color="#ff7b84"/><stop offset=".55" stop-color="#c62f3a"/><stop offset="1" stop-color="#7d1520"/></radialGradient></defs>
+      <path d="M23 1.5a4 4 0 0 1 4 4" fill="none" stroke="#e2b13c" stroke-width="2"/>
+      <rect x="17" y="5" width="12" height="8" rx="2" fill="#e2b13c"/>
+      <circle cx="23" cy="32" r="20" fill="url(#og)"/>
+      <path d="M4.5 28.5c12 4 25 4 37 0M4.5 35.5c12 4 25 4 37 0" fill="none" stroke="#f6d77c" stroke-width="2" opacity=".9"/>
+    </svg>
+    <h1 id="title">Christmas Party <span>Lucky Draw</span></h1>
+    <p id="subtitle">Find your name, spin the wheel, get your lucky number.</p>
+  </header>
+
+  <div id="countdown" class="countdown" hidden>
+    <div class="cd-when" id="cdWhen"></div>
+    <div class="cd-clock" id="cdClock" aria-live="off"></div>
+  </div>
+
+  <div class="progress" aria-live="polite">
+    <span id="progText">Loading…</span>
+    <div class="bar"><i id="progBar"></i></div>
+  </div>
+
+  <!-- 1 · pick your name -->
+  <section id="scrPick" class="card" aria-labelledby="pickH">
+    <h2 id="pickH">Who are you?</h2>
+    <p class="sub">Tap your name to get to the wheel.</p>
+    <input id="search" class="search" type="search" placeholder="Search names" autocomplete="off" aria-label="Search names">
+    <div id="names" class="names"><div class="empty-msg">Loading names…</div></div>
+    <div id="mine" class="mine" hidden></div>
+  </section>
+
+  <!-- 2 · spin -->
+  <section id="scrSpin" class="card" hidden aria-labelledby="spinH">
+    <h2 id="spinH" class="greet">Hi <b id="who"></b>, ready?</h2>
+    <div class="wheel-box">
+      <svg class="rim" viewBox="-110 -110 220 220" aria-hidden="true">
+        <defs>
+          <linearGradient id="rimG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f8de8c"/><stop offset=".5" stop-color="#c8952a"/><stop offset="1" stop-color="#f3cf6a"/></linearGradient>
+        </defs>
+        <circle r="108" fill="url(#rimG)"/>
+        <circle r="99.5" fill="#5b1218"/>
+        <g id="bulbs"></g>
+      </svg>
+      <svg id="wheel" viewBox="-110 -110 220 220" role="img" aria-label="Lucky draw wheel"></svg>
+      <svg viewBox="-110 -110 220 220" aria-hidden="true" style="z-index:2">
+        <circle r="17" fill="url(#rimG)" stroke="#7a5512" stroke-width="1.2"/>
+        <path d="M0-10 2.9-3.1 10.4-3.1 4.4 1.5 6.6 8.8 0 4.5-6.6 8.8-4.4 1.5-10.4-3.1-2.9-3.1Z" fill="#fff6d6"/>
+      </svg>
+      <svg class="pointer" viewBox="0 0 40 52" aria-hidden="true">
+        <path d="M20 50 3 14A17 17 0 1 1 37 14Z" fill="#c62f3a" stroke="#f6d77c" stroke-width="3" stroke-linejoin="round"/>
+        <circle cx="20" cy="17" r="6" fill="#f6d77c"/>
+      </svg>
+      <div id="wheelDone" class="wheel-done" hidden>All numbers have been drawn.</div>
+    </div>
+    <button id="spinBtn" class="btn" type="button">SPIN</button>
+    <p id="spinMsg" class="msg" aria-live="polite"></p>
+    <button class="link" type="button" data-go="pick">Not you? Choose another name</button>
+  </section>
+
+  <!-- 3 · result -->
+  <section id="scrResult" class="card result" hidden aria-live="polite">
+    <p class="lead"><b id="resName"></b>, your lucky draw number is</p>
+    <div class="bauble">
+      <svg viewBox="0 0 200 230" aria-hidden="true">
+        <defs><radialGradient id="bg" cx=".34" cy=".38" r=".85"><stop offset="0" stop-color="#ff8089"/><stop offset=".5" stop-color="#c62f3a"/><stop offset="1" stop-color="#6e1019"/></radialGradient></defs>
+        <path d="M100 4a10 10 0 0 1 10 10" fill="none" stroke="#e2b13c" stroke-width="4"/>
+        <rect x="78" y="14" width="44" height="24" rx="5" fill="#e2b13c"/>
+        <rect x="78" y="22" width="44" height="3" fill="#b4851f"/>
+        <circle cx="100" cy="132" r="94" fill="url(#bg)"/>
+        <ellipse cx="66" cy="88" rx="22" ry="13" fill="#fff" opacity=".22" transform="rotate(-30 66 88)"/>
+      </svg>
+      <div class="num" id="resNum">–</div>
+    </div>
+    <p class="label">Lucky draw number</p>
+    <p class="hint">Take a screenshot so you have it handy. 📸</p>
+    <div id="resNote" class="note" hidden></div>
+    <button class="link" type="button" data-go="pick">Back to the names</button>
+  </section>
+
+  <div id="err" class="err" role="alert" hidden></div>
+  <footer>Merry Christmas &amp; happy holidays 🎄</footer>
+</main>
+
+<canvas id="confetti" class="fx" aria-hidden="true"></canvas>
+
+<script>
+(() => {
+  'use strict';
+  const $ = (s) => document.querySelector(s);
+  const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const POLL_MS = 4000;
+  let LS_KEY = 'luckydraw:v3:live';
+
+  const S = {
+    data: null,          // last /api/state
+    clockSkew: 0,        // server time − phone time, ms
+    name: null,
+    attempted: new Set(), // names this phone has pressed Spin for (a retry after a lost reply is still "ours")
+    wheelNums: [], rotation: 0, spinning: false,
+    screen: 'pick', connErr: false,
+  };
+
+  // ── draws made on this phone (one phone may draw for a child too)
+  const mine = {
+    all() { try { return JSON.parse(localStorage.getItem(LS_KEY)) || []; } catch { return []; } },
+    save(l) { try { localStorage.setItem(LS_KEY, JSON.stringify(l)); } catch {} },
+    put(e) { const l = mine.all().filter((x) => x.name !== e.name); l.push(e); mine.save(l); },
+    prune(people) {
+      const drawn = new Set(people.filter((p) => p.drawn).map((p) => p.name));
+      const l = mine.all(), kept = l.filter((x) => drawn.has(x.name));
+      if (kept.length !== l.length) mine.save(kept);
+      return kept;
+    },
+  };
+
+  // ── API
+  async function api(path, body) {
+    const opts = body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {};
+    const r = await fetch(path, { ...opts, cache: 'no-store' });
+    let j = {}; try { j = await r.json(); } catch {}
+    if (!r.ok) { const e = new Error(j.error || `Request failed (${r.status})`); e.status = r.status; e.body = j; throw e; }
+    return j;
+  }
+  function showError(msg) { const el = $('#err'); el.textContent = msg || ''; el.hidden = !msg; }
+
+  // ── screens
+  function go(screen) {
+    S.screen = screen;
+    document.body.classList.toggle('compact', screen !== 'pick');
+    $('#scrPick').hidden = screen !== 'pick';
+    $('#scrSpin').hidden = screen !== 'spin';
+    $('#scrResult').hidden = screen !== 'result';
+    showError('');
+    if (screen === 'pick') renderNames();
+    if (screen === 'spin') { $('#who').textContent = S.name; buildWheel(S.data ? S.data.remaining : []); renderSpinState(); }
+    renderCountdown();
+    window.scrollTo({ top: 0, behavior: REDUCED ? 'auto' : 'smooth' });
+  }
+  document.addEventListener('click', (e) => { const b = e.target.closest('[data-go]'); if (b && !S.spinning) go(b.dataset.go); });
+
+  // ── state polling
+  async function refresh() {
+    try {
+      const d = await api('/api/state');
+      const prevKey = S.data ? S.data.remaining.join(',') : '';
+      S.data = d;
+      S.clockSkew = Date.parse(d.serverNow) - Date.now();
+      if (S.connErr) { S.connErr = false; showError(''); }
+      renderHeader();
+      if (S.screen === 'pick') renderNames();
+      if (S.screen === 'spin' && !S.spinning && S.name && !S.attempted.has(S.name) && d.people.find((x) => x.name === S.name)?.drawn) {
+        spunElsewhere(S.name);
+        return d;
+      }
+      if (S.screen === 'spin' && !S.spinning) {
+        if (d.remaining.join(',') !== prevKey) buildWheel(d.remaining);
+        renderSpinState();
+      }
+      renderCountdown();
+      return d;
+    } catch (e) {
+      S.connErr = true;
+      showError(e.status === 503 ? e.message : 'Can’t reach the lucky draw right now. Check your connection — this page will keep trying.');
+    }
+  }
+
+  function renderHeader() {
+    const d = S.data; if (!d) return;
+    const test = d.siteMode === 'test';
+    $('#testBar').hidden = !test;
+    const t = d.event?.title || 'Lucky Draw';
+    const m = t.match(/^(.*?)(Lucky Draw)$/i);
+    const h = $('#title'); h.textContent = '';
+    if (m) { h.append(m[1]); const sp = document.createElement('span'); sp.textContent = m[2]; h.append(sp); } else h.textContent = t;
+    document.title = (test ? '[TEST] ' : '') + t;
+    if (d.event?.subtitle) $('#subtitle').textContent = d.event.subtitle;
+    $('#progText').textContent = `${d.drawn} of ${d.total} lucky numbers drawn` + (d.open ? '' : ' · draw not open yet');
+    $('#progBar').style.width = (d.total ? (100 * d.drawn) / d.total : 0) + '%';
+  }
+
+  // ── countdown to the scheduled opening (always shown in the event's time zone)
+  function fmtOpening(iso, tz) {
+    const dt = new Date(iso);
+    const day = new Intl.DateTimeFormat('en-SG', { timeZone: tz, weekday: 'short', day: 'numeric', month: 'short' }).format(dt);
+    const time = new Intl.DateTimeFormat('en-SG', { timeZone: tz, hour: 'numeric', minute: '2-digit', hour12: true }).format(dt).replace(/\s?([ap])\.?m\.?/i, (x, a) => ` ${a.toLowerCase()}m`);
+    return `${day}, ${time}`;
+  }
+  function msToOpen() {
+    const d = S.data; if (!d || d.open || !d.opensAt || d.hostMode === 'closed') return null;
+    const ms = Date.parse(d.opensAt) - (Date.now() + S.clockSkew);
+    return ms > 0 ? ms : 0;
+  }
+  function renderCountdown() {
+    const box = $('#countdown'), d = S.data, ms = msToOpen();
+    if (ms === null) { box.hidden = true; return; }
+    box.hidden = false;
+    $('#cdWhen').innerHTML = '';
+    $('#cdWhen').append('The lucky draw opens ');
+    const b = document.createElement('b'); b.textContent = fmtOpening(d.opensAt, d.event?.timeZone || 'Asia/Singapore'); $('#cdWhen').append(b);
+    const sec = Math.floor(ms / 1000), parts = [[Math.floor(sec / 86400), 'days'], [Math.floor(sec / 3600) % 24, 'hrs'], [Math.floor(sec / 60) % 60, 'min'], [sec % 60, 'sec']];
+    const clock = $('#cdClock');
+    if (clock.children.length !== 4) {
+      clock.textContent = '';
+      for (const [, l] of parts) { const u = document.createElement('div'); u.className = 'cd-unit'; u.innerHTML = '<b></b><small></small>'; u.lastChild.textContent = l; clock.append(u); }
+    }
+    parts.forEach(([v], i) => { clock.children[i].firstChild.textContent = i === 0 ? v : String(v).padStart(2, '0'); });
+    clock.setAttribute('aria-label', `${parts[0][0]} days ${parts[1][0]} hours ${parts[2][0]} minutes`);
+    if (ms === 0 && !S.opening) { S.opening = true; setTimeout(() => refresh().finally(() => (S.opening = false)), 800); }
+  }
+  setInterval(() => { renderCountdown(); if (S.screen === 'spin' && !S.spinning && msToOpen() !== null) renderSpinState(); }, 1000);
+
+  // ── 1 · names
+  function renderNames() {
+    const d = S.data; if (!d) return;
+    const q = $('#search').value.trim().toLowerCase();
+    const box = $('#names');
+    const people = [...d.people].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
+      .filter((p) => !q || p.name.toLowerCase().includes(q));
+    box.textContent = '';
+    if (!people.length) { const m = document.createElement('div'); m.className = 'empty-msg'; m.textContent = 'No matching name.'; box.append(m); }
+    for (const p of people) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'name' + (p.drawn ? ' done' : '');
+      b.dataset.name = p.name;
+      b.disabled = p.drawn; // once a name has spun, it can't be picked again
+      b.append(p.name);
+      if (p.drawn) { const sm = document.createElement('small'); sm.textContent = '✓ already spun'; b.append(sm); }
+      b.setAttribute('aria-label', p.drawn ? `${p.name}, already spun` : p.name);
+      box.append(b);
+    }
+    const list = mine.prune(d.people).filter((x) => x.number != null);
+    const m = $('#mine'); m.hidden = !list.length; m.textContent = '';
+    if (list.length) {
+      const lbl = document.createElement('div'); lbl.textContent = 'Drawn on this phone:'; m.append(lbl);
+      for (const x of list) {
+        const c = document.createElement('button'); c.type = 'button'; c.className = 'chip'; c.dataset.mine = x.name;
+        c.append(x.name + ' '); const st = document.createElement('strong'); st.textContent = '#' + x.number; c.append(st);
+        m.append(c);
+      }
+    }
+  }
+  $('#search').addEventListener('input', renderNames);
+  $('#names').addEventListener('click', (e) => { const b = e.target.closest('.name'); if (b && !b.disabled) choose(b.dataset.name); });
+  $('#mine').addEventListener('click', (e) => { const c = e.target.closest('[data-mine]'); if (c) { const x = mine.all().find((y) => y.name === c.dataset.mine); if (x) showResult(x.name, x.number); } });
+
+  function choose(name) {
+    const p = S.data && S.data.people.find((x) => x.name === name);
+    if (!p || p.drawn) { showError(`${name} has already spun the wheel.`); renderNames(); return; }
+    S.name = name;
+    go('spin');
+  }
+
+  // Someone else spun this name (another phone) while it was open here → back to the names.
+  function spunElsewhere(name) {
+    go('pick');
+    showError(`${name} has already spun the wheel on another phone. Each name can spin only once — ask the host if this is a mistake.`);
+  }
+
+  // ── 2 · wheel
+  const NS = 'http://www.w3.org/2000/svg';
+  const el = (tag, attrs) => { const n = document.createElementNS(NS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); return n; };
+  const pt = (r, deg) => { const a = (deg * Math.PI) / 180; return [r * Math.sin(a), -r * Math.cos(a)]; };
+  const COLORS = [{ fill: '#c62f3a', text: '#fff' }, { fill: '#1e7a4a', text: '#fff' }, { fill: '#f6ecd6', text: '#5a2a10' }];
+  const GOLD = { fill: '#e2b13c', text: '#3d2208' };
+
+  (function buildBulbs() {
+    const g = $('#bulbs');
+    for (let i = 0; i < 24; i++) { const [x, y] = pt(103.8, i * 15); g.append(el('circle', { cx: x.toFixed(2), cy: y.toFixed(2), r: 2.6, class: 'bulb b' + (i % 2 + 1) })); }
+  })();
+
+  function buildWheel(nums) {
+    const svg = $('#wheel');
+    S.wheelNums = [...nums];
+    svg.textContent = '';
+    const n = nums.length, R = 98;
+    $('#wheelDone').hidden = n > 0;
+    svg.setAttribute('aria-label', n ? `Wheel with ${n} lucky number${n === 1 ? '' : 's'} left` : 'All numbers drawn');
+    if (!n) { svg.append(el('circle', { r: R, fill: '#14402f' })); return; }
+    const seg = 360 / n;
+    const fs = n <= 8 ? 20 : n <= 14 ? 15 : n <= 22 ? 12 : n <= 32 ? 10.5 : 8;
+    const g = el('g', {});
+    nums.forEach((num, i) => {
+      let c = COLORS[i % 3];
+      if (n > 1 && i === n - 1 && i % 3 === 0) c = GOLD; // never two equal colours side by side
+      const a0 = i * seg, a1 = a0 + seg;
+      if (n === 1) g.append(el('circle', { r: R, fill: c.fill }));
+      else {
+        const [x0, y0] = pt(R, a0), [x1, y1] = pt(R, a1);
+        g.append(el('path', { d: `M0 0L${x0.toFixed(3)} ${y0.toFixed(3)}A${R} ${R} 0 ${seg > 180 ? 1 : 0} 1 ${x1.toFixed(3)} ${y1.toFixed(3)}Z`, fill: c.fill, stroke: 'rgba(60,10,10,.35)', 'stroke-width': .6 }));
+      }
+      const t = el('text', { transform: `rotate(${(a0 + seg / 2).toFixed(3)}) translate(0 ${-(R - 10 - fs * .55)})`, 'text-anchor': 'middle', 'dominant-baseline': 'central', fill: c.text, 'font-size': fs, 'font-weight': 800, 'font-family': 'system-ui, -apple-system, Segoe UI, Roboto, sans-serif' });
+      t.textContent = num;
+      g.append(t);
+    });
+    svg.append(g);
+    svg.append(el('circle', { r: R, fill: 'none', stroke: 'rgba(0,0,0,.25)', 'stroke-width': 1 }));
+  }
+
+  function renderSpinState() {
+    const d = S.data, btn = $('#spinBtn'), msg = $('#spinMsg');
+    if (S.spinning) return;
+    if (!d) { btn.disabled = true; return; }
+    if (!d.open) {
+      btn.disabled = true;
+      const ms = msToOpen();
+      btn.textContent = ms ? 'Opens soon' : 'Draw not open yet';
+      msg.textContent = ms ? 'The wheel unlocks by itself at the start time — keep this page open, or come back then.' : 'The host will open the draw. Keep this page open — the button unlocks by itself.';
+      return;
+    }
+    if (!d.remaining.length) { btn.disabled = true; btn.textContent = 'All drawn'; msg.textContent = 'Every number has been taken. Ask the host if you haven’t got one.'; return; }
+    btn.disabled = false; btn.textContent = 'SPIN'; msg.textContent = `${d.remaining.length} number${d.remaining.length === 1 ? '' : 's'} left on the wheel.`;
+  }
+
+  function rotateTo(number) {
+    const svg = $('#wheel');
+    const i = S.wheelNums.indexOf(number);
+    const seg = 360 / S.wheelNums.length;
+    const center = (i + 0.5) * seg + (Math.random() - 0.5) * seg * 0.6;
+    const target = (((-center) % 360) + 360) % 360;
+    const cur = ((S.rotation % 360) + 360) % 360;
+    let delta = target - cur; if (delta < 0) delta += 360;
+    const turns = REDUCED ? 1 : 6 + Math.floor(Math.random() * 2);
+    S.rotation += turns * 360 + delta;
+    const dur = REDUCED ? 900 : 5600;
+    return new Promise((resolve) => {
+      let done = false; const fin = () => { if (!done) { done = true; resolve(); } };
+      svg.style.transition = `transform ${dur}ms cubic-bezier(.12,.74,.1,1)`;
+      requestAnimationFrame(() => { svg.style.transform = `rotate(${S.rotation}deg)`; });
+      svg.addEventListener('transitionend', fin, { once: true });
+      setTimeout(fin, dur + 250);
+    });
+  }
+
+  $('#spinBtn').addEventListener('click', async () => {
+    if (S.spinning || !S.name) return;
+    const btn = $('#spinBtn');
+    S.spinning = true; btn.disabled = true; btn.textContent = 'Spinning…'; $('#spinMsg').textContent = ''; showError('');
+    let r;
+    const mineBefore = S.attempted.has(S.name);
+    S.attempted.add(S.name);
+    if (!mine.all().some((x) => x.name === S.name)) mine.put({ name: S.name, number: null });
+    try {
+      r = await api('/api/draw', { name: S.name });
+    } catch (e) {
+      S.spinning = false;
+      if (e.status === 403 && S.data) S.data.open = false;
+      showError(e.message || 'Couldn’t draw. Please try again — you’ll never get two numbers.');
+      renderSpinState(); refresh();
+      return;
+    }
+    if (r.status === 'existing') {
+      S.spinning = false;
+      if (mineBefore) { showResult(r.name, r.number); return; } // our earlier spin went through; reply was lost
+      S.attempted.delete(r.name);
+      mine.save(mine.all().filter((x) => x.name !== r.name || x.number != null));
+      spunElsewhere(r.name); refresh();
+      return;
+    }
+    if (!S.wheelNums.includes(r.number)) buildWheel([...S.wheelNums, r.number].sort((a, b) => a - b));
+    await rotateTo(r.number);
+    S.spinning = false;
+    showResult(r.name, r.number, null, true);
+    refresh();
+  });
+
+  // ── 3 · result
+  function showResult(name, number, note, celebrate) {
+    mine.put({ name, number });
+    $('#resName').textContent = name;
+    $('#resNum').textContent = number;
+    const n = $('#resNote');
+    n.hidden = !note;
+    n.textContent = note ? `${name} drew this number earlier — each person gets one number only.` : '';
+    go('result');
+    if (celebrate) confetti();
+  }
+
+  // ── confetti
+  function confetti() {
+    if (REDUCED) return;
+    const c = $('#confetti'), ctx = c.getContext('2d'), dpr = Math.min(2, devicePixelRatio || 1);
+    c.width = innerWidth * dpr; c.height = innerHeight * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const cols = ['#c62f3a', '#1e7a4a', '#e2b13c', '#f6ecd6', '#f6d77c'];
+    const P = Array.from({ length: 160 }, () => ({
+      x: innerWidth / 2 + (Math.random() - .5) * 80, y: innerHeight * .38,
+      vx: (Math.random() - .5) * 13, vy: -Math.random() * 13 - 4, s: 5 + Math.random() * 6,
+      r: Math.random() * 6, vr: (Math.random() - .5) * .35, c: cols[(Math.random() * cols.length) | 0],
+    }));
+    const t0 = performance.now();
+    (function frame(t) {
+      const elp = t - t0; ctx.clearRect(0, 0, innerWidth, innerHeight);
+      for (const p of P) {
+        p.vy += .32; p.vx *= .99; p.x += p.vx; p.y += p.vy; p.r += p.vr;
+        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.globalAlpha = Math.max(0, 1 - elp / 3200);
+        ctx.fillStyle = p.c; ctx.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); ctx.restore();
+      }
+      if (elp < 3200) requestAnimationFrame(frame); else ctx.clearRect(0, 0, innerWidth, innerHeight);
+    })(t0);
+  }
+
+  // ── snow
+  (function snow() {
+    if (REDUCED) return;
+    const c = $('#snow'), ctx = c.getContext('2d');
+    let W, H;
+    const size = () => { const dpr = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight; c.width = W * dpr; c.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); };
+    size(); addEventListener('resize', size);
+    const F = Array.from({ length: Math.round(Math.min(70, W / 8)) }, () => ({ x: Math.random() * W, y: Math.random() * H, r: .8 + Math.random() * 2.2, v: .25 + Math.random() * .7, w: Math.random() * 6.28 }));
+    (function frame() {
+      if (!document.hidden) {
+        ctx.clearRect(0, 0, W, H); ctx.fillStyle = '#ffffff';
+        for (const f of F) {
+          f.y += f.v; f.w += .01; f.x += Math.sin(f.w) * .3;
+          if (f.y > H + 4) { f.y = -4; f.x = Math.random() * W; }
+          ctx.globalAlpha = .35 + f.r / 5; ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, 6.283); ctx.fill();
+        }
+      }
+      requestAnimationFrame(frame);
+    })();
+  })();
+
+  // ── start
+  (async function start() {
+    const d = await refresh();
+    if (d) LS_KEY = 'luckydraw:v3:' + d.siteMode; // test and live sites never mix their phone memory
+    let list = d ? mine.prune(d.people) : [];
+    for (const x of list) {
+      S.attempted.add(x.name);
+      if (x.number == null) { // spun, but the reply never arrived before the page closed
+        try { const r = await api('/api/draw', { name: x.name }); if (r.number != null) mine.put({ name: x.name, number: r.number }); } catch {}
+      }
+    }
+    list = mine.all().filter((x) => x.number != null);
+    if (list.length) { const last = list[list.length - 1]; showResult(last.name, last.number); }
+    else go('pick');
+    setInterval(() => { if (!document.hidden) refresh(); }, POLL_MS);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
+  })();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Lucky Draw · Host</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='27' y='4' width='10' height='9' rx='2' fill='%23e2b13c'/%3E%3Ccircle cx='32' cy='38' r='23' fill='%231e7a4a'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b201a; --panel: #11302566; --line: rgba(255,255,255,.13);
+    --ink: #fdf8ee; --ink-2: #cfe0d6; --ink-3: #9fbcae;
+    --red: #c62f3a; --green: #2f9e63; --gold: #e2b13c; --gold-l: #f6d77c;
+    --serif: "Fraunces", Georgia, serif; --sans: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: var(--sans); color: var(--ink); background: radial-gradient(900px 500px at 50% -10%, #19523a, var(--bg) 60%) fixed, var(--bg); min-height: 100vh; }
+  [hidden] { display: none !important; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 22px 18px 50px; }
+  h1 { font-family: var(--serif); font-weight: 800; font-size: 26px; margin: 0; }
+  h1 span { color: var(--gold-l); }
+  .muted { color: var(--ink-3); }
+  button, input { font: inherit; }
+  .btn { appearance: none; border: 1px solid var(--line); background: rgba(255,255,255,.08); color: var(--ink); padding: 9px 14px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px; }
+  .btn:hover { background: rgba(255,255,255,.14); }
+  .btn:focus-visible, input:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+  .btn.primary { background: linear-gradient(180deg, var(--gold-l), var(--gold)); color: #2b1606; border-color: transparent; }
+  .btn.go { background: var(--green); border-color: transparent; }
+  .btn.stop { background: var(--red); border-color: transparent; }
+  .btn.danger { border-color: rgba(198,47,58,.6); color: #ffc9cd; }
+  .btn.sm { padding: 5px 10px; font-size: 13px; }
+  .btn:disabled { opacity: .5; cursor: default; }
+
+  .login { max-width: 360px; margin: 14vh auto 0; text-align: center; background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 26px 22px; }
+  .login input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--line); background: rgba(0,0,0,.25); color: var(--ink); margin: 16px 0 12px; font-size: 16px; }
+  .login .btn { width: 100%; padding: 12px; }
+  .err { color: #ffb3b9; font-size: 14px; min-height: 1.3em; margin-top: 10px; }
+
+  header.top { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .status { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; margin-bottom: 14px; }
+  .pill { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 99px; font-weight: 700; font-size: 14px; }
+  .pill::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: currentColor; }
+  .pill.open { background: rgba(47,158,99,.18); color: #7fe0aa; }
+  .pill.closed { background: rgba(198,47,58,.18); color: #ff9aa2; }
+  .stat { font-size: 14px; color: var(--ink-2); }
+  .stat b { font-family: var(--serif); font-size: 22px; color: var(--ink); margin-right: 4px; }
+  .grow { flex: 1; }
+  .warn { background: rgba(226,177,60,.12); border: 1px solid rgba(226,177,60,.45); color: var(--gold-l); border-radius: 12px; padding: 10px 14px; margin-bottom: 14px; font-size: 14px; }
+
+  .tabs { display: flex; gap: 6px; margin-bottom: 12px; }
+  .tab { appearance: none; border: 1px solid var(--line); background: transparent; color: var(--ink-2); padding: 8px 14px; border-radius: 99px; cursor: pointer; font-weight: 600; font-size: 14px; }
+  .tab[aria-selected="true"] { background: var(--ink); color: #0b201a; border-color: var(--ink); }
+
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--line); }
+  th { font-size: 12.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-3); font-weight: 600; background: rgba(0,0,0,.18); }
+  th button { all: unset; cursor: pointer; }
+  th button:focus-visible { outline: 2px solid var(--gold); }
+  tr:last-child td { border-bottom: 0; }
+  td.num { font-family: var(--serif); font-weight: 800; font-size: 19px; color: var(--gold-l); width: 90px; }
+  td.num.none { color: var(--ink-3); font-family: var(--sans); font-weight: 400; font-size: 14px; }
+  td.at { color: var(--ink-3); font-size: 13.5px; white-space: nowrap; }
+  td.act { text-align: right; width: 1%; white-space: nowrap; }
+
+  .board { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; padding: 14px; }
+  .tile { border-radius: 14px; padding: 12px; min-height: 92px; display: flex; flex-direction: column; justify-content: space-between; background: rgba(255,255,255,.05); border: 1px dashed var(--line); }
+  .tile .n { font-family: var(--serif); font-weight: 800; font-size: 30px; line-height: 1; color: var(--ink-3); }
+  .tile .who { font-size: 17px; font-weight: 700; color: var(--ink-3); }
+  .tile.taken { background: linear-gradient(160deg, rgba(198,47,58,.35), rgba(30,122,74,.3)); border: 1px solid rgba(246,215,124,.35); }
+  .tile.taken .n { color: var(--gold-l); }
+  .tile.taken .who { color: var(--ink); }
+  .board-wrap:fullscreen { background: var(--bg); overflow: auto; padding: 24px; }
+  .board-wrap:fullscreen .board { grid-template-columns: repeat(5, 1fr); gap: 14px; }
+  .board-wrap:fullscreen .tile { min-height: 16vh; }
+  .board-wrap:fullscreen .tile .n { font-size: 5vh; }
+  .board-wrap:fullscreen .tile .who { font-size: 3vh; }
+  .board-head { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px 0; gap: 10px; flex-wrap: wrap; }
+  .board-head h2 { font-family: var(--serif); margin: 0; font-size: 20px; }
+
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 11px; overflow: hidden; }
+  .seg button { appearance: none; border: 0; background: transparent; color: var(--ink-2); padding: 8px 12px; font-weight: 600; font-size: 13.5px; cursor: pointer; }
+  .seg button + button { border-left: 1px solid var(--line); }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: #0b201a; }
+  .seg button:focus-visible { outline: 2px solid var(--gold); outline-offset: -2px; }
+  .seg button:disabled { opacity: .6; }
+  .pill.wait { background: rgba(226,177,60,.16); color: var(--gold-l); }
+  .test-badge { display: inline-block; margin-top: 10px; padding: 4px 10px; border-radius: 6px; font-weight: 800; font-size: 12px; letter-spacing: .1em; color: #2b1606; background: repeating-linear-gradient(-45deg, #f6d77c 0 10px, #e2b13c 10px 20px); }
+  .test-panel { display: grid; grid-template-columns: 1fr auto; gap: 10px 16px; align-items: center; border: 1px dashed rgba(246,215,124,.55); background: rgba(226,177,60,.07); border-radius: 16px; padding: 14px 16px; margin-bottom: 14px; }
+  .test-panel h3 { margin: 0 0 4px; font-size: 16px; }
+  .test-panel p { margin: 0; font-size: 13.5px; color: var(--ink-2); }
+  .stress-out { grid-column: 1 / -1; font-size: 14px; padding: 10px 12px; border-radius: 10px; background: rgba(0,0,0,.25); white-space: pre-line; }
+  .stress-out.pass { border: 1px solid rgba(127,224,170,.5); }
+  .stress-out.fail { border: 1px solid rgba(255,154,162,.6); }
+  @media (max-width: 560px) { .test-panel { grid-template-columns: 1fr; } }
+  .danger-zone { margin-top: 26px; border: 1px solid rgba(198,47,58,.4); border-radius: 16px; padding: 16px; }
+  .danger-zone h3 { margin: 0 0 6px; font-size: 16px; }
+  .danger-zone p { margin: 0 0 12px; color: var(--ink-3); font-size: 14px; }
+  .danger-zone input { padding: 9px 12px; border-radius: 10px; border: 1px solid var(--line); background: rgba(0,0,0,.25); color: var(--ink); width: 160px; }
+  .toast { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); background: #fdf8ee; color: #0b201a; padding: 10px 16px; border-radius: 10px; font-weight: 600; font-size: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.4); }
+  @media (max-width: 560px) { td.at { display: none; } th.at { display: none; } th, td { padding: 9px 10px; } .seg button { padding: 8px 9px; font-size: 13px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <form id="login" class="login" autocomplete="on">
+    <h1>Host <span>controls</span></h1>
+    <div id="loginTest" class="test-badge" hidden>TEST SITE</div>
+    <p class="muted">Enter the admin password to manage the lucky draw.</p>
+    <input id="pw" type="password" placeholder="Admin password" aria-label="Admin password" autocomplete="current-password" required>
+    <button class="btn primary" type="submit">Sign in</button>
+    <div id="loginErr" class="err" role="alert"></div>
+  </form>
+
+  <div id="app" hidden>
+    <header class="top">
+      <div>
+        <h1 id="title">Lucky Draw · <span>Host</span></h1>
+        <div class="muted" style="font-size:13px;margin-top:4px">Participants open <a href="/" style="color:var(--gold-l)">the main page</a>. This page refreshes every few seconds.</div>
+      </div>
+      <div class="row">
+        <button class="btn" id="inviteBtn" type="button" title="Copies a message with the link and the start time, ready to paste into the group chat">Copy invite message</button>
+        <button class="btn" id="csvBtn" type="button">Download CSV</button>
+        <button class="btn" id="logoutBtn" type="button">Sign out</button>
+      </div>
+    </header>
+
+    <div class="status">
+      <span id="pill" class="pill closed">Draw closed</span>
+      <div class="seg" role="group" aria-label="Draw control">
+        <button type="button" data-mode="schedule" aria-pressed="false">Follow schedule</button>
+        <button type="button" data-mode="open" aria-pressed="false">Open now</button>
+        <button type="button" data-mode="close" aria-pressed="false">Closed</button>
+      </div>
+      <span class="grow"></span>
+      <span class="stat"><b id="sDrawn">0</b>drawn</span>
+      <span class="stat"><b id="sLeft">0</b>numbers left</span>
+      <span class="stat"><b id="sTotal">0</b>participants</span>
+    </div>
+    <div id="when" class="muted" style="font-size:13.5px;margin:-4px 2px 14px"></div>
+    <div id="warn" class="warn" hidden></div>
+
+    <div id="testPanel" class="test-panel" hidden>
+      <div>
+        <h3>Live concurrency test</h3>
+        <p>Makes every participant without a number spin at the same instant — each one twice — against this site’s real servers, then checks that nobody got two numbers and no number was given twice. Reset afterwards.</p>
+      </div>
+      <button id="stressBtn" class="btn primary" type="button">Run the test</button>
+      <div id="stressOut" class="stress-out" hidden></div>
+    </div>
+
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" aria-selected="true" data-tab="table">Table</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="board">Board (for the big screen)</button>
+    </div>
+
+    <div id="tabTable" class="panel">
+      <table>
+        <thead><tr>
+          <th><button type="button" data-sort="name">Name</button></th>
+          <th><button type="button" data-sort="number">Number</button></th>
+          <th class="at"><button type="button" data-sort="at">Drawn at</button></th>
+          <th class="act"><span class="sr" style="position:absolute;left:-9999px">Actions</span></th>
+        </tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+
+    <div id="tabBoard" class="panel board-wrap" hidden>
+      <div class="board-head">
+        <h2 id="boardTitle">Lucky draw numbers</h2>
+        <button class="btn sm" id="fsBtn" type="button">Full screen</button>
+      </div>
+      <div id="board" class="board"></div>
+    </div>
+
+    <div class="danger-zone">
+      <h3>Reset everything</h3>
+      <p>Clears every number and sets the switch back to <b>Follow schedule</b>. Use it after testing on the real site. Type <b>RESET</b> to confirm.</p>
+      <div class="row">
+        <input id="resetTxt" type="text" placeholder="Type RESET" aria-label="Type RESET to confirm" autocomplete="off">
+        <button id="resetBtn" class="btn danger" type="button" disabled>Reset everything</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="toast" class="toast" hidden role="status"></div>
+
+<script>
+(() => {
+  'use strict';
+  const $ = (s) => document.querySelector(s);
+  const KEY = 'luckydraw:adminpw';
+  let pw = sessionStorage.getItem(KEY) || '';
+  let data = null, sort = { by: 'number', dir: 1 }, confirmName = null, timer = null;
+
+  async function api(method, body) {
+    const r = await fetch('/api/admin', {
+      method, cache: 'no-store',
+      headers: { 'X-Admin-Password': pw, ...(body ? { 'Content-Type': 'application/json' } : {}) },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    let j = {}; try { j = await r.json(); } catch {}
+    if (!r.ok) { const e = new Error(j.error || `Request failed (${r.status})`); e.status = r.status; throw e; }
+    return j;
+  }
+
+  function toast(msg) { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => (t.hidden = true), 2200); }
+
+  async function load() {
+    try { data = await api('GET'); render(); return true; }
+    catch (e) {
+      if (e.status === 401 || e.status === 503) { signOut(e.message); }
+      else toast('Couldn’t refresh: ' + e.message);
+      return false;
+    }
+  }
+
+  function signOut(msg) {
+    pw = ''; sessionStorage.removeItem(KEY); clearInterval(timer);
+    $('#app').hidden = true; $('#login').hidden = false; $('#loginErr').textContent = msg || '';
+  }
+
+  $('#login').addEventListener('submit', async (e) => {
+    e.preventDefault(); pw = $('#pw').value; $('#loginErr').textContent = '';
+    if (await load()) { sessionStorage.setItem(KEY, pw); enter(); }
+  });
+  $('#logoutBtn').addEventListener('click', () => signOut(''));
+
+  function enter() {
+    $('#login').hidden = true; $('#app').hidden = false;
+    clearInterval(timer); timer = setInterval(() => { if (!document.hidden) load(); }, 3000);
+  }
+
+  function fmtTime(iso) { if (!iso) return ''; const d = new Date(iso); return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }
+
+  function render() {
+    const d = data;
+    $('#title').textContent = ''; $('#title').append((d.event?.title || 'Lucky Draw') + ' · ');
+    const sp = document.createElement('span'); sp.textContent = 'Host'; $('#title').append(sp);
+    $('#boardTitle').textContent = d.event?.title || 'Lucky draw numbers';
+    const drawn = d.people.filter((p) => p.number != null).length;
+    $('#sDrawn').textContent = drawn; $('#sLeft').textContent = d.remaining.length; $('#sTotal').textContent = d.total;
+    const test = d.siteMode === 'test';
+    if (test) { const tb = document.createElement('span'); tb.className = 'test-badge'; tb.style.cssText = 'margin:0 0 0 10px;vertical-align:middle'; tb.textContent = 'TEST SITE'; $('#title').append(tb); }
+    $('#testPanel').hidden = !test;
+    const opening = d.opensAt ? fmtOpening(d.opensAt, d.event?.timeZone) : null;
+    const future = d.opensAt && Date.parse(d.opensAt) > Date.parse(d.serverNow);
+    $('#pill').className = 'pill ' + (d.open ? 'open' : d.hostMode === 'auto' && future ? 'wait' : 'closed');
+    $('#pill').textContent = d.open ? 'Draw open' : d.hostMode === 'auto' && future ? 'Opens ' + opening : 'Draw closed';
+    document.querySelectorAll('[data-mode]').forEach((b) => b.setAttribute('aria-pressed', String({ schedule: 'auto', open: 'open', close: 'closed' }[b.dataset.mode] === d.hostMode)));
+    $('#when').textContent =
+      d.hostMode === 'open' ? 'You opened the draw by hand.' + (future ? ` (The schedule would open it ${opening}.)` : '')
+      : d.hostMode === 'closed' ? 'You closed the draw by hand — the schedule is ignored until you choose “Follow schedule”.'
+      : d.opensAt ? (future ? `Following the schedule: opens by itself ${opening} (${d.event?.timeZone || 'Asia/Singapore'} time).` : `Following the schedule: opened ${opening}.`)
+      : 'Following the schedule: this site has no start time, so the draw is open.';
+
+    const w = [];
+    if (d.storage === 'memory') w.push('Local preview: numbers are kept in memory and vanish when the server restarts.');
+    if (d.sizeMismatch) w.push('The participant list changed after drawing started. Reset everything so numbers run from 1 to ' + d.total + '.');
+    if (d.orphans.length) w.push('Removed from the list but still holding a number: ' + d.orphans.map((o) => `${o.name} (#${o.number})`).join(', ') + '. Reset everything to clear them.');
+    $('#warn').hidden = !w.length; $('#warn').textContent = w.join(' ');
+
+    // table
+    const rows = [...d.people].sort((a, b) => {
+      const k = sort.by;
+      const va = k === 'name' ? a.name.toLowerCase() : a[k], vb = k === 'name' ? b.name.toLowerCase() : b[k];
+      if (va == null && vb == null) return a.name.localeCompare(b.name);
+      if (va == null) return 1; if (vb == null) return -1;
+      return (va < vb ? -1 : va > vb ? 1 : 0) * sort.dir;
+    });
+    const tb = $('#rows'); tb.textContent = '';
+    for (const p of rows) {
+      const tr = document.createElement('tr');
+      const tdN = document.createElement('td'); tdN.textContent = p.name;
+      const tdNum = document.createElement('td'); tdNum.className = 'num' + (p.number == null ? ' none' : ''); tdNum.textContent = p.number ?? 'not yet';
+      const tdAt = document.createElement('td'); tdAt.className = 'at'; tdAt.textContent = fmtTime(p.at);
+      const tdA = document.createElement('td'); tdA.className = 'act';
+      if (p.number != null) {
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'btn sm danger'; b.dataset.release = p.name;
+        b.textContent = confirmName === p.name ? 'Confirm release?' : 'Release';
+        b.title = 'Put this number back on the wheel so the person can spin again';
+        tdA.append(b);
+      }
+      tr.append(tdN, tdNum, tdAt, tdA); tb.append(tr);
+    }
+
+    // board
+    const byNum = {}; d.people.forEach((p) => { if (p.number != null) byNum[p.number] = p.name; });
+    const bd = $('#board'); bd.textContent = '';
+    for (let n = 1; n <= d.total; n++) {
+      const t = document.createElement('div'); t.className = 'tile' + (byNum[n] ? ' taken' : '');
+      const a = document.createElement('div'); a.className = 'n'; a.textContent = n;
+      const b = document.createElement('div'); b.className = 'who'; b.textContent = byNum[n] || '—';
+      t.append(a, b); bd.append(t);
+    }
+  }
+
+  $('#rows').addEventListener('click', async (e) => {
+    const b = e.target.closest('[data-release]'); if (!b) return;
+    const name = b.dataset.release;
+    if (confirmName !== name) { confirmName = name; render(); setTimeout(() => { if (confirmName === name) { confirmName = null; render(); } }, 4000); return; }
+    confirmName = null;
+    try { data = await api('POST', { action: 'release', name }); render(); toast(`${name}'s number is back on the wheel`); }
+    catch (err) { toast(err.message); }
+  });
+
+  document.querySelectorAll('[data-mode]').forEach((b) => b.addEventListener('click', async () => {
+    const all = document.querySelectorAll('[data-mode]'); all.forEach((x) => (x.disabled = true));
+    try { data = await api('POST', { action: b.dataset.mode }); render(); toast(data.open ? 'The draw is open' : data.hostMode === 'auto' ? 'Following the schedule' : 'The draw is closed'); }
+    catch (err) { toast(err.message); }
+    all.forEach((x) => (x.disabled = false));
+  }));
+
+  function fmtOpening(iso, tz) {
+    const dt = new Date(iso); tz = tz || 'Asia/Singapore';
+    const day = new Intl.DateTimeFormat('en-SG', { timeZone: tz, weekday: 'short', day: 'numeric', month: 'short' }).format(dt);
+    const time = new Intl.DateTimeFormat('en-SG', { timeZone: tz, hour: 'numeric', minute: '2-digit', hour12: true }).format(dt).replace(/\s?([ap])\.?m\.?/i, (x, a) => ` ${a.toLowerCase()}m`);
+    return `${day}, ${time}`;
+  }
+
+  async function copyText(text) {
+    try { await navigator.clipboard.writeText(text); return true; }
+    catch {
+      const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.append(ta); ta.select();
+      let ok = false; try { ok = document.execCommand('copy'); } catch {} ta.remove(); return ok;
+    }
+  }
+  $('#inviteBtn').addEventListener('click', async () => {
+    if (!data) return;
+    const test = data.siteMode === 'test';
+    const when = data.opensAt && !test ? ` It opens ${fmtOpening(data.opensAt, data.event?.timeZone)}:` : ':';
+    const text = `${test ? '[TEST] ' : ''}🎄 ${data.event?.title || 'Lucky draw'}!${when} open ${location.origin}/ , tap your own name and spin the wheel for your lucky number. One spin per person.`;
+    toast((await copyText(text)) ? 'Invite message copied' : 'Couldn’t copy');
+  });
+
+  // Live concurrency test (test site only): every participant without a number
+  // spins at the same instant, twice, from this browser.
+  $('#stressBtn').addEventListener('click', async () => {
+    const out = $('#stressOut'), btn = $('#stressBtn');
+    if (!data || data.siteMode !== 'test') return;
+    const todo = data.people.filter((p) => p.number == null);
+    if (!todo.length) { out.hidden = false; out.className = 'stress-out'; out.textContent = 'Everyone already has a number — reset first.'; return; }
+    if (!data.open) { out.hidden = false; out.className = 'stress-out'; out.textContent = 'The draw is closed — choose “Open now” or “Follow schedule” first.'; return; }
+    btn.disabled = true; out.hidden = false; out.className = 'stress-out'; out.textContent = `Firing ${todo.length * 2} simultaneous spins…`;
+    const before = Object.fromEntries(data.people.filter((p) => p.number != null).map((p) => [p.name, p.number]));
+    const jobs = todo.flatMap((p) => [p, p]).sort(() => Math.random() - 0.5);
+    const t0 = performance.now();
+    const res = await Promise.all(jobs.map((p) => fetch('/api/draw', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: p.name }) })
+      .then(async (r) => ({ p, ok: r.ok, ...(await r.json().catch(() => ({}))) })).catch((e) => ({ p, ok: false, error: String(e) }))));
+    const ms = Math.round(performance.now() - t0);
+    const per = {}; let failed = 0;
+    for (const r of res) { if (!r.ok) { failed++; continue; } (per[r.p.name] ||= new Set()).add(r.number); }
+    const twoForOne = Object.entries(per).filter(([, s]) => s.size > 1).map(([n]) => n);
+    const all = [...Object.values(before), ...Object.values(per).map((s) => [...s][0])];
+    const dupes = all.filter((n, i) => all.indexOf(n) !== i);
+    await load();
+    const serverOk = data.people.every((p) => (per[p.name] ? per[p.name].has(p.number) : true));
+    const pass = !failed && !twoForOne.length && !dupes.length && serverOk;
+    out.className = 'stress-out ' + (pass ? 'pass' : 'fail');
+    out.textContent = pass
+      ? `✓ Passed: ${res.length} spins sent at once for ${todo.length} people in ${ms} ms. Everyone got exactly one number, no number was given twice, and the server’s records match.`
+      : `✗ Problem found: ${failed} failed request(s)${twoForOne.length ? '; two numbers for ' + twoForOne.join(', ') : ''}${dupes.length ? '; duplicated numbers ' + [...new Set(dupes)].join(', ') : ''}${serverOk ? '' : '; server records differ'}.`;
+    btn.disabled = false;
+  });
+
+  $('#resetTxt').addEventListener('input', (e) => { $('#resetBtn').disabled = e.target.value.trim() !== 'RESET'; });
+  $('#resetBtn').addEventListener('click', async () => {
+    try { data = await api('POST', { action: 'reset' }); $('#resetTxt').value = ''; $('#resetBtn').disabled = true; render(); toast('Everything has been reset'); }
+    catch (err) { toast(err.message); }
+  });
+
+  document.querySelectorAll('[data-sort]').forEach((b) => b.addEventListener('click', () => {
+    const k = b.dataset.sort; sort = { by: k, dir: sort.by === k ? -sort.dir : 1 }; render();
+  }));
+
+  document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach((x) => x.setAttribute('aria-selected', String(x === t)));
+    $('#tabTable').hidden = t.dataset.tab !== 'table'; $('#tabBoard').hidden = t.dataset.tab !== 'board';
+  }));
+  $('#fsBtn').addEventListener('click', () => {
+    const w = $('#tabBoard');
+    if (document.fullscreenElement) document.exitFullscreen(); else if (w.requestFullscreen) w.requestFullscreen();
+  });
+
+  $('#csvBtn').addEventListener('click', () => {
+    if (!data) return;
+    const q = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const lines = [['Number', 'Name', 'Drawn at'].map(q).join(',')];
+    [...data.people].sort((a, b) => (a.number ?? 1e9) - (b.number ?? 1e9)).forEach((p) => lines.push([p.number ?? '', p.name, p.at ?? ''].map(q).join(',')));
+    const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'lucky-draw-numbers.csv'; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  });
+
+  fetch('/api/state', { cache: 'no-store' }).then((r) => r.json()).then((st) => { if (st.siteMode === 'test') { $('#loginTest').hidden = false; document.title = '[TEST] ' + document.title; } }).catch(() => {});
+  if (pw) load().then((ok) => ok && enter());
+})();
+</script>
+</body>
+</html>
