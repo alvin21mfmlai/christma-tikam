@@ -113,6 +113,23 @@
   .result .hint { color: var(--ink-3); font-size: 14px; margin: 12px 0 0; }
   .result .note { display: inline-block; margin-top: 12px; padding: 8px 12px; border-radius: 10px; background: rgba(226,177,60,.12); border: 1px solid rgba(226,177,60,.35); font-size: 14px; color: var(--ink-2); }
 
+  /* ── board ── */
+  .board-card { margin-top: 18px; }
+  .board-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+  .board-top h2 { margin: 0; text-align: left; }
+  .board-top span { color: var(--ink-3); font-size: 13.5px; white-space: nowrap; }
+  .board { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+  .tile { position: relative; border-radius: 12px; padding: 8px 10px 9px; min-height: 66px; display: flex; flex-direction: column; justify-content: space-between; background: rgba(255,255,255,.04); border: 1px dashed var(--line); }
+  .tile .n { font-family: var(--serif); font-weight: 800; font-size: 22px; line-height: 1; color: var(--ink-3); }
+  .tile .who { font-size: 14px; font-weight: 700; color: var(--ink-3); overflow-wrap: anywhere; line-height: 1.2; margin-top: 6px; }
+  .tile.taken { background: linear-gradient(160deg, rgba(198,47,58,.38), rgba(30,122,74,.32)); border: 1px solid rgba(246,215,124,.35); }
+  .tile.taken .n { color: var(--gold-l); }
+  .tile.taken .who { color: var(--ink); }
+  .tile.me { border: 2px solid var(--gold); box-shadow: 0 0 0 3px rgba(226,177,60,.18); }
+  .tile.me::after { content: "You"; position: absolute; top: 7px; right: 8px; font-size: 10.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: #2b1606; background: var(--gold-l); padding: 1px 6px; border-radius: 99px; }
+  .tile.fresh { animation: fresh 1.6s ease-out; }
+  @keyframes fresh { 0% { transform: scale(.86); box-shadow: 0 0 0 0 rgba(246,215,124,.8); } 40% { transform: scale(1.04); } 100% { transform: none; box-shadow: 0 0 0 14px rgba(246,215,124,0); } }
+  @media (prefers-reduced-motion: reduce) { .tile.fresh { animation: none; } }
   .err { margin: 16px auto 0; max-width: 420px; padding: 11px 14px; border-radius: 12px; background: rgba(198,47,58,.18); border: 1px solid rgba(198,47,58,.55); color: #ffdfe1; font-size: 14px; text-align: center; }
   footer { text-align: center; color: var(--ink-3); font-size: 13px; margin-top: 28px; }
 
@@ -214,6 +231,12 @@
   </section>
 
   <div id="err" class="err" role="alert" hidden></div>
+
+  <!-- live board: every number and who drew it -->
+  <section id="boardSec" class="card board-card" aria-labelledby="boardH" hidden>
+    <div class="board-top"><h2 id="boardH">Lucky draw board</h2><span id="boardCount"></span></div>
+    <div id="board" class="board" aria-live="off"></div>
+  </section>
   <footer>Merry Christmas &amp; happy holidays 🎄</footer>
 </main>
 
@@ -283,6 +306,7 @@
       S.clockSkew = Date.parse(d.serverNow) - Date.now();
       if (S.connErr) { S.connErr = false; showError(''); }
       renderHeader();
+      renderBoard();
       if (S.screen === 'pick') renderNames();
       if (S.screen === 'spin' && !S.spinning && S.name && !S.attempted.has(S.name) && d.people.find((x) => x.name === S.name)?.drawn) {
         spunElsewhere(S.name);
@@ -298,6 +322,28 @@
       S.connErr = true;
       showError(e.status === 503 ? e.message : 'Can’t reach the lucky draw right now. Check your connection — this page will keep trying.');
     }
+  }
+
+  // ── live board (numbers 1…N with the name that drew each)
+  // Not redrawn while this phone's wheel is spinning, so it never gives the result away early.
+  let boardSeen = null; // numbers already shown as taken, to flash only new ones
+  function renderBoard() {
+    const d = S.data; if (!d || !d.board || S.spinning) return;
+    $('#boardSec').hidden = false;
+    const byNum = {}; d.board.forEach((x) => { byNum[x.number] = x.name; });
+    const me = new Set(mine.all().filter((x) => x.number != null).map((x) => x.name));
+    $('#boardCount').textContent = `${d.board.length} of ${d.total} drawn`;
+    const box = $('#board'); box.textContent = '';
+    for (let n = 1; n <= d.total; n++) {
+      const who = byNum[n];
+      const t = document.createElement('div');
+      t.className = 'tile' + (who ? ' taken' : '') + (who && me.has(who) ? ' me' : '') + (who && boardSeen && !boardSeen.has(n) ? ' fresh' : '');
+      const a = document.createElement('div'); a.className = 'n'; a.textContent = n;
+      const b = document.createElement('div'); b.className = 'who'; b.textContent = who || '—';
+      t.setAttribute('aria-label', who ? `Number ${n}: ${who}` : `Number ${n}: not drawn yet`);
+      t.append(a, b); box.append(t);
+    }
+    boardSeen = new Set(Object.keys(byNum).map(Number));
   }
 
   function renderHeader() {

@@ -1,5 +1,6 @@
 // GET /api/state — public view: is the draw open (or when it opens), which
-// numbers are left, and which names have drawn (not who holds which number).
+// numbers are left, which names have drawn, and the board (number → name)
+// shown on the main page.
 import { EVENT, PARTICIPANTS, SITE_MODE, opensAtMs, scheduledOpen } from '../lib/config.js';
 import { getStore, remainingNumbers, isOpen } from '../lib/store.js';
 import { send, handleError } from '../lib/http.js';
@@ -20,6 +21,7 @@ export default async function handler(req, res) {
       drawn: PARTICIPANTS.filter((n) => s.byName[n] != null).length,
       remaining: remainingNumbers(s),
       people: PARTICIPANTS.map((name) => ({ name, drawn: s.byName[name] != null })),
+      board: PARTICIPANTS.filter((n) => s.byName[n] != null).map((name) => ({ number: s.byName[name], name })).sort((a, b) => a.number - b.number),
     });
   } catch (err) {
     handleError(res, err);

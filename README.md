@@ -110,6 +110,9 @@ countdown and automatic opening.
 
 - At 7 pm the wheel unlocks on everyone's phone by itself.
 - The **Board** tab shows numbers 1–25 filling in with names — **Full screen** on a TV.
+- The same board is also on the **main page** for everyone, below the name list. It updates every few
+  seconds, highlights the viewer's own number as **You**, and doesn't show a person's result until their
+  own wheel has stopped.
 - Someone drew by mistake? Table tab → **Release** (tap twice): their number goes back on the
   wheel and they can spin again.
 - **Closed** stops new draws.
